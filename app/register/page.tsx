@@ -2,28 +2,33 @@
 
 import React, { useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthProvider";
 
-const LoginPage = () => {
-  const { login } = useAuth();
+const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const router = useRouter();
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
+  const nameRef = useRef<HTMLInputElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Simple validation: non-empty username & password
+    // Simple validation: non-empty fields
     setUsernameError(null);
     setPasswordError(null);
+    setNameError(null);
 
+    if (!name.trim()) {
+      setNameError("Name is required");
+      nameRef.current?.focus();
+      return;
+    }
     if (!username.trim()) {
       setUsernameError("Username is required");
       usernameRef.current?.focus();
@@ -35,14 +40,11 @@ const LoginPage = () => {
       return;
     }
 
-    const payload = { username, password };
-
-    // Debug: log the outgoing payload
-    console.log("Sending login request to /api/auth/login", payload);
+    const payload = { username, password, name };
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/user/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -50,21 +52,19 @@ const LoginPage = () => {
 
       const body = await res.json();
 
-      // Debug: log status and parsed body
-      console.log("Received response from /api/auth/login", {
-        status: res.status,
-        body,
-      });
+      console.log("body =>", body);
+      console.log("res.status =>", res.status);
+      console.log("body.message =>", body?.message);
 
       if (res.status === 200) {
-        toast.success(body?.message || "Login successful");
-        login(username, body?.accessToken); // Set user in AuthProvider
-        router.push("/home");
+        toast.success(body?.message || "Registration successful");
       } else {
-        toast.error(body?.message || `Login failed (status ${res.status})`);
+        toast.error(
+          body?.message || `Registration failed (status ${res.status})`
+        );
       }
     } catch (err) {
-      console.error("Network error while calling /api/auth/login:", err);
+      console.error("Network error while calling /api/auth/register:", err);
     } finally {
       setLoading(false);
     }
@@ -77,13 +77,40 @@ const LoginPage = () => {
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-sm p-6 bg-white rounded-2xl shadow-md flex flex-col gap-2 border border-gray-200"
-        aria-label="Sign in form"
+        aria-label="Register form"
       >
         <div className="flex flex-col items-center mb-6">
           <h1 className="text-xl font-bold text-blue-900">Summora</h1>
         </div>
 
-        <h2 className="text-md text-blue-900 pb-2">Sign in</h2>
+        <h2 className="text-md text-blue-900 pb-2">Register</h2>
+
+        <label className="sr-only" htmlFor="name">
+          Name
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          ref={nameRef}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (nameError) setNameError(null);
+          }}
+          placeholder="Full name"
+          className={`w-full bg-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 border ${
+            nameError ? "border-red-400" : "border-gray-300"
+          }`}
+        />
+        <p
+          className={`text-xs my-1 h-3 flex items-center ${
+            nameError ? "text-red-600" : "text-transparent"
+          }`}
+          aria-live="polite"
+        >
+          {nameError || "\u00A0"}
+        </p>
 
         <label className="sr-only" htmlFor="username">
           Username
@@ -98,7 +125,7 @@ const LoginPage = () => {
             setUsername(e.target.value);
             if (usernameError) setUsernameError(null);
           }}
-          placeholder="Email or username"
+          placeholder="Username"
           className={`w-full bg-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 border ${
             usernameError ? "border-red-400" : "border-gray-300"
           }`}
@@ -145,21 +172,12 @@ const LoginPage = () => {
             disabled={loading}
             className="inline-flex items-center justify-center rounded-lg bg-blue-600 text-white px-5 py-2 text-sm font-medium shadow-sm hover:bg-blue-500 disabled:opacity-60 border border-blue-700"
           >
-            {loading ? "Loading..." : "Sign in"}
+            {loading ? "Loading..." : "Register"}
           </button>
-        </div>
-
-        <div className="flex items-center justify-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:underline ml-1">
-              Register here
-            </a>
-          </p>
         </div>
       </form>
     </div>
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

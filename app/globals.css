@@ -19,8 +19,12 @@
   }
 }
 
+body,
+* {
+  font-family: "Itim", cursive;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
