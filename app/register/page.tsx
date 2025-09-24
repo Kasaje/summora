@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -15,6 +16,7 @@ const RegisterPage = () => {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const nameRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,8 +58,9 @@ const RegisterPage = () => {
       console.log("res.status =>", res.status);
       console.log("body.message =>", body?.message);
 
-      if (res.status === 200) {
+      if (res.status === 201) {
         toast.success(body?.message || "Registration successful");
+        router.push("/");
       } else {
         toast.error(
           body?.message || `Registration failed (status ${res.status})`

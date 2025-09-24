@@ -4,15 +4,16 @@ import React, { useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthProvider";
+import { Iuser } from "@/interface";
 
 const LoginPage = () => {
-  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const router = useRouter();
+  const { setUser } = useAuth();
 
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
@@ -58,7 +59,8 @@ const LoginPage = () => {
 
       if (res.status === 200) {
         toast.success(body?.message || "Login successful");
-        login(username, body?.accessToken); // Set user in AuthProvider
+        console.log("accesstoken => ", body.accessToken);
+        setUser({ username } as Iuser);
         router.push("/home");
       } else {
         toast.error(body?.message || `Login failed (status ${res.status})`);

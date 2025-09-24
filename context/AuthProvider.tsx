@@ -1,95 +1,98 @@
 "use client";
 
-import React, {
+import { Iuser } from "@/interface";
+import { useRouter } from "next/navigation";
+import {
   createContext,
-  useContext,
-  useState,
   ReactNode,
+  useContext,
   useEffect,
+  useState,
+  useCallback,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
 
 interface AuthContextType {
-  user: string | null;
-  login: (username: string, token: string) => void;
-  logout: () => void;
+  user: Iuser | null;
+  setUser: React.Dispatch<React.SetStateAction<Iuser | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<string | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [user, setUser] = useState<Iuser | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("accessToken");
-    if (storedUser) {
-      setUser(storedUser);
-    }
-    if (storedToken) {
-      setAccessToken(storedToken);
-    }
-  }, []);
+  const checkLogin = useCallback(async () => {
+    const currentPath = window.location.pathname;
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (accessToken) {
-        try {
-          const res = await fetch("/auth/refresh", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: accessToken }),
-          });
+    // Define public paths that don't require authentication
+    const publicPaths = ["/", "/register"];
+    const isPublicPath = (pathname: string) => {
+      return publicPaths.includes(pathname);
+    };
 
-          if (res.status === 200) {
-            const data = await res.json();
-            setAccessToken(data.accessToken);
-            localStorage.setItem("accessToken", data.accessToken);
-          } else {
-            console.error("Failed to refresh access token");
-            logout();
-          }
-        } catch (err) {
-          console.error("Error refreshing access token:", err);
-          logout();
+    const meResponse = await fetch("/api/user/me", {
+      method: "POST",
+      credentials: "include",
+    });
+    console.log("Check login response status:", meResponse.status);
+    if (meResponse.status === 200) {
+      const userData = await meResponse.json();
+      console.log("User data fetched:", userData);
+      setUser(userData);
+    } else if (meResponse.status === 401) {
+      const refreshResponse = await fetch("/api/auth/refresh", {
+        credentials: "include",
+      });
+
+      if (refreshResponse.status === 200) {
+        const userData = await fetch("/api/user/me", {
+          credentials: "include",
+        });
+        const userJson = await userData.json();
+        setUser(userJson);
+      } else {
+        setUser(null);
+        // Only redirect to "/" if not on a public path
+        if (!isPublicPath(currentPath)) {
+          router.push("/");
         }
       }
-    }, 15 * 60 * 1000); // Refresh every 15 minutes
-
-    return () => clearInterval(interval);
-  }, [accessToken]);
+    } else {
+      setUser(null);
+      // Only redirect to "/" if not on a public path
+      if (!isPublicPath(currentPath)) {
+        router.push("/");
+      }
+    }
+  }, [router]);
 
   useEffect(() => {
-    if (!user && pathname !== "/") {
-      router.push("/");
-    }
-  }, [user, pathname, router]);
-
-  const login = (username: string, token: string) => {
-    setUser(username);
-    setAccessToken(token);
-    localStorage.setItem("user", username);
-    localStorage.setItem("accessToken", token);
-    router.push("/home");
-  };
-
-  const logout = () => {
-    setUser(null);
-    setAccessToken(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-  };
+    console.log("Check login starting...");
+    checkLogin();
+  }, [checkLogin]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+export const useAuthActions = () => {
+  const auth = useAuth();
+  const router = useRouter();
+
+  const setUser = auth!.setUser;
+
+  const logout = async () => {
+    setUser(null);
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    router.push("/");
+  };
+
+  return { logout };
+};
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

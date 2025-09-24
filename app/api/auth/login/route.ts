@@ -14,8 +14,7 @@ export const POST = async (request: NextRequest) => {
     );
 
     (await cookies()).set("accessToken", accessToken, {
-      httpOnly: true,
-      path: "/",
+      httpOnly: false,
       maxAge: 60 * 60,
     });
 

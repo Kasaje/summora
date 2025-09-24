@@ -11,7 +11,7 @@ export const userRepository = {
       ...userInfo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      status: true,
+      isActive: true,
     });
   },
 
@@ -20,6 +20,6 @@ export const userRepository = {
   },
 
   async delete(username: string) {
-    await userConnection.updateOne({ username }, { $set: { status: false } });
+    await userConnection.deleteOne({ username });
   },
 };
