@@ -9,7 +9,7 @@ export const authService = {
 
     console.log("username, password", username, password);
     if (!user) throw { message: "User not found.", status: 404 };
-    if (!user.status) throw { message: "User not found.", status: 404 };
+    if (!user.isActive) throw { message: "User not found.", status: 404 };
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 

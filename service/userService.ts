@@ -15,4 +15,12 @@ export const userService = {
     const passwordHash = await bcrypt.hash(password, 12);
     await userRepository.create({ ...info, username, passwordHash });
   },
+
+  async getByUsername(username: string): Promise<Iuser | null> {
+    return userRepository.getByUsername(username);
+  },
+
+  async delete(username: string): Promise<void> {
+    await userRepository.delete(username);
+  },
 };

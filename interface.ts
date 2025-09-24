@@ -3,7 +3,7 @@ export interface Iuser {
   name: string;
   passwordHash: string;
   isLogin: boolean;
-  status: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
