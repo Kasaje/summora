@@ -1,6 +1,6 @@
 "use client";
 
-import { Iuser } from "@/interface";
+import { Iuser } from "@/utils/interface";
 import { useRouter } from "next/navigation";
 import {
   createContext,
