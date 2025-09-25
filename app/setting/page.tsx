@@ -56,226 +56,91 @@ export default function SettingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Account Settings
+                  Delete Account
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  Manage your account preferences and settings
+                  Permanently remove your account and all associated data
                 </p>
               </div>
               <button
-                onClick={() => router.push("/profile")}
+                onClick={() => router.push("/home")}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
-                View Profile
+                Back to Home
               </button>
             </div>
           </div>
         </div>
 
-        {/* Account Information */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Account Information
-            </h2>
-          </div>
-          <div className="px-6 py-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Username
-                </label>
-                <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded-md">
-                  @{user.username}
-                </p>
-              </div>
-              {user.name && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded-md">
-                    {user.name}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Account Status
-                </label>
-                <span
-                  className={`inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {user.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Member Since
-                </label>
-                <p className="mt-1 text-sm text-gray-900 bg-gray-50 p-2 rounded-md">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Privacy & Security */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Privacy & Security
-            </h2>
-          </div>
-          <div className="px-6 py-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Change Password
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Update your account password
-                </p>
-              </div>
-              <button
-                onClick={() =>
-                  toast("Change password functionality coming soon!", {
-                    icon: "🔐",
-                  })
-                }
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-200"
-              >
-                Change Password
-              </button>
-            </div>
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">
-                    Two-Factor Authentication
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Add an extra layer of security to your account
-                  </p>
-                </div>
-                <button
-                  onClick={() =>
-                    toast("2FA setup coming soon!", {
-                      icon: "🔒",
-                    })
-                  }
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition duration-200"
-                >
-                  Setup 2FA
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Preferences */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Preferences</h2>
-          </div>
-          <div className="px-6 py-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Email Notifications
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Receive email updates about your account
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  defaultChecked
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            <div className="border-t border-gray-200 pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">
-                    Dark Mode
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Toggle dark mode theme
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Danger Zone */}
+        {/* Delete Account Section */}
         <div className="bg-white rounded-lg shadow-sm border border-red-200 mb-6">
           <div className="px-6 py-4 border-b border-red-200 bg-red-50">
-            <h2 className="text-lg font-semibold text-red-900">Danger Zone</h2>
+            <h2 className="text-lg font-semibold text-red-900">⚠️ Warning</h2>
             <p className="text-sm text-red-600 mt-1">
-              These actions are permanent and cannot be undone
+              This action is permanent and cannot be undone
             </p>
           </div>
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Delete Account
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Permanently delete your account and all associated data
-                </p>
-              </div>
+          <div className="px-6 py-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                What happens when you delete your account?
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  Your account (@{user.username}) will be permanently deleted
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  All your personal data and transaction history will be removed
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  You will be immediately logged out from all devices
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  This action cannot be reversed or undone
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-md mb-6">
+              <p className="text-sm text-gray-700">
+                <strong>Account Details:</strong>
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Username: @{user.username}
+              </p>
+              {user.name && (
+                <p className="text-sm text-gray-600">Name: {user.name}</p>
+              )}
+              <p className="text-sm text-gray-600">
+                Member since:{" "}
+                {new Date(user.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+
+            <div className="flex justify-center">
               <button
                 onClick={() => setShowDeleteConfirmation(true)}
-                className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition duration-200"
+                className="bg-red-600 text-white px-8 py-3 rounded-md text-sm font-medium hover:bg-red-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
-                Delete Account
+                Delete My Account
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between">
-          <button
-            onClick={() => router.push("/home")}
-            className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition duration-200"
-          >
-            Back to Home
-          </button>
-          <button
-            onClick={logout}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-200"
-          >
-            Logout
-          </button>
         </div>
       </div>
 
