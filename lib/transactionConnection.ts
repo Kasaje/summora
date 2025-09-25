@@ -1,11 +1,11 @@
 import { mongoClient } from "./mongodb";
 import type { Collection } from "mongodb";
-import type { Iuser } from "../utils/interface";
+import type { Itransaction } from "../utils/interface";
 
 const databaseName = process.env.DATABASE_NAME;
 
 if (!databaseName) throw new Error("Database name not provided");
 
-export const userConnection: Collection<Iuser> = mongoClient
+export const transactionConnection: Collection<Itransaction> = mongoClient
   .db(databaseName)
-  .collection<Iuser>("users");
+  .collection<Itransaction>("transactions");

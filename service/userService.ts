@@ -1,4 +1,4 @@
-import { Iuser } from "@/interface";
+import { Iuser } from "@/utils/interface";
 import bcrypt from "bcrypt";
 import { userRepository } from "@/repository/userRepository";
 

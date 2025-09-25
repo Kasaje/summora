@@ -1,5 +1,9 @@
-import { Iuser } from "@/interface";
-import { userConnection } from "../lib/userConnection";
+import { Iuser } from "@/utils/interface";
+import {
+  transactionCategoryConnection,
+  transactionConnection,
+  userConnection,
+} from "../lib/index";
 
 export const userRepository = {
   async getByUsername(username: string) {
@@ -21,5 +25,7 @@ export const userRepository = {
 
   async delete(username: string) {
     await userConnection.deleteOne({ username });
+    await transactionConnection.deleteMany({ userId: username });
+    await transactionCategoryConnection.deleteMany({ userId: username });
   },
 };
