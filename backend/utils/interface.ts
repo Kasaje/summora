@@ -59,6 +59,7 @@ export interface ItransactionCategoryRepository {
 }
 
 export interface IuserRepository {
+  getByID(id: string): Promise<Iuser | null>;
   getByUsername(username: string): Promise<Iuser | null>;
   create(info: Partial<Iuser>): Promise<{ insertedId: ObjectId }>;
   update(username: string, updateInfo: Iuser): Promise<void>;

@@ -25,6 +25,10 @@ export class UserService implements IuserRepository {
     await transactionCategoryRepository.initializeDefaultCategories(userID);
   }
 
+  async getByID(id: string): Promise<Iuser | null> {
+    return await this.userRepository.getByID(id);
+  }
+
   async getByUsername(username: string) {
     return await this.userRepository.getByUsername(username);
   }

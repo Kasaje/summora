@@ -5,6 +5,11 @@ import { ObjectId } from "mongodb";
 export class UserRepository {
   constructor() {}
 
+  async getByID(id: string): Promise<Iuser | null> {
+    const user = await userConnection.findOne({ _id: new ObjectId(id) });
+    return user ? this.map(user) : null;
+  }
+
   async getByUsername(username: string): Promise<Iuser | null> {
     const user = await userConnection.findOne({ username });
     return user ? this.map(user) : null;

@@ -24,8 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return publicPaths.includes(pathname);
     };
 
-    const meResponse = await fetch("/api/user/me", {
-      method: "POST",
+    const meResponse = await fetch("/api/auth/me", {
       credentials: "include",
     });
     console.log("Check login response status:", meResponse.status);
@@ -39,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (refreshResponse.status === 200) {
-        const userData = await fetch("/api/user/me", {
+        const userData = await fetch("/api/auth/me", {
           credentials: "include",
         });
         const userJson = await userData.json();
