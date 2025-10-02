@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import Navbar from "../../components/Navbar";
+import toast, { Toaster } from "react-hot-toast";
 
 interface Transaction {
   id: string;
@@ -18,55 +19,100 @@ const HomePage = () => {
   const auth = useAuth();
   const user = auth?.user;
 
-  // Mock data for transactions
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: "1",
-      type: "income",
-      amount: 120000,
-      category: "Salary",
-      description: "Monthly salary",
-      date: "2025-09-20",
-      currency: "THB",
-    },
-    {
-      id: "2",
-      type: "expense",
-      amount: 5500,
-      category: "Food",
-      description: "Groceries",
-      date: "2025-09-19",
-      currency: "THB",
-    },
-    {
-      id: "3",
-      type: "expense",
-      amount: 1500,
-      category: "Transportation",
-      description: "Gas",
-      date: "2025-09-18",
-      currency: "THB",
-    },
-  ]);
+  // Transaction data from API
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isModalAnimating, setIsModalAnimating] = useState(false);
-  const [categories, setCategories] = useState<{ name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
 
   // All amounts are in THB (Thai Baht)
+  // Summary data from API
+  const totalIncome = summary.income;
+  const totalExpense = summary.expense;
+  const netBalance = summary.balance;
 
-  // Calculate totals in THB
-  const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const netBalance = totalIncome - totalExpense;
+  // Fetch summary from API
+  const fetchSummary = async () => {
+    setIsLoadingSummary(true);
+    try {
+      const response = await fetch("/api/transaction/summary", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const summaryData = await response.json();
+        setSummary({
+          income: summaryData.income || 0,
+          expense: summaryData.expense || 0,
+          balance: summaryData.balance || 0,
+        });
+      } else {
+        console.error("Failed to fetch summary");
+        setSummary({ income: 0, expense: 0, balance: 0 });
+      }
+    } catch (error) {
+      console.error("Error fetching summary:", error);
+      setSummary({ income: 0, expense: 0, balance: 0 });
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
+
+  // Fetch transactions from API
+  const fetchTransactions = async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const response = await fetch("/api/transaction/list", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const transactionData = await response.json();
+        // Map API response to Transaction interface
+        const mappedTransactions: Transaction[] = (transactionData || []).map(
+          (t: {
+            _id?: string;
+            id?: string;
+            type: "income" | "expense";
+            amount: number;
+            categoryName?: string;
+            category?: string;
+            description: string;
+            date?: string;
+          }) => ({
+            id: t._id || t.id || "",
+            type: t.type,
+            amount: t.amount,
+            category: t.categoryName || t.category || "",
+            description: t.description,
+            date: t.date
+              ? new Date(t.date).toISOString().split("T")[0]
+              : new Date().toISOString().split("T")[0],
+            currency: "THB" as const,
+          })
+        );
+        setTransactions(mappedTransactions);
+      } else {
+        console.error("Failed to fetch transactions");
+        setTransactions([]);
+      }
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setTransactions([]);
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  };
 
   // Fetch categories from API
   const fetchCategories = async () => {
@@ -92,9 +138,11 @@ const HomePage = () => {
     }
   };
 
-  // Fetch categories when user arrives at home page (background loading)
+  // Fetch data when user arrives at home page (background loading)
   useEffect(() => {
     fetchCategories();
+    fetchSummary();
+    fetchTransactions();
   }, []);
 
   const formatCurrency = (amount: number, compact: boolean = false) => {
@@ -154,8 +202,27 @@ const HomePage = () => {
     }, 200);
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const response = await fetch(`/api/transaction/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // Refresh transaction list and summary from API
+        fetchTransactions();
+        fetchSummary();
+        toast.success("Transaction deleted successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to delete transaction");
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      toast.error("Network error. Please try again.");
+    }
+
     setDeleteConfirm(null);
   };
 
@@ -228,12 +295,19 @@ const HomePage = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p
-                  className="text-2xl lg:text-3xl font-bold text-red-600 truncate"
-                  title={formatCurrency(totalExpense)}
-                >
-                  {formatCurrency(totalExpense, true)}
-                </p>
+                {isLoadingSummary ? (
+                  <div className="flex items-center space-x-2 my-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p
+                    className="text-2xl lg:text-3xl font-bold text-red-600 truncate"
+                    title={formatCurrency(totalExpense)}
+                  >
+                    {formatCurrency(totalExpense, true)}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">All amounts in Thai Baht (THB)</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -253,14 +327,21 @@ const HomePage = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0 pr-4">
                 <p className="text-sm font-medium text-gray-600">Net Balance</p>
-                <p
-                  className={`text-2xl lg:text-3xl font-bold truncate ${
-                    netBalance >= 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                  title={formatCurrency(netBalance)}
-                >
-                  {formatCurrency(netBalance, true)}
-                </p>
+                {isLoadingSummary ? (
+                  <div className="flex items-center space-x-2 my-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <span className="text-lg text-gray-400">Loading...</span>
+                  </div>
+                ) : (
+                  <p
+                    className={`text-2xl lg:text-3xl font-bold truncate ${
+                      netBalance >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                    title={formatCurrency(netBalance)}
+                  >
+                    {formatCurrency(netBalance, true)}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">Thai Baht (฿) - Official Currency</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -287,129 +368,140 @@ const HomePage = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
           </div>
-          <div className="divide-y divide-gray-200">
-            {transactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="px-6 py-4 hover:bg-gray-50 transition duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        transaction.type === "income" ? "bg-green-100" : "bg-red-100"
-                      }`}
-                    >
-                      {transaction.type === "income" ? (
-                        <svg
-                          className="w-6 h-6 text-green-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-6 h-6 text-red-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 12H4"
-                          />
-                        </svg>
-                      )}
+          {isLoadingTransactions ? (
+            <div className="px-6 py-12 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Loading transactions...</p>
+            </div>
+          ) : transactions.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-gray-500">No transactions found</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {transactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="px-6 py-4 hover:bg-gray-50 transition duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          transaction.type === "income" ? "bg-green-100" : "bg-red-100"
+                        }`}
+                      >
+                        {transaction.type === "income" ? (
+                          <svg
+                            className="w-6 h-6 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-6 h-6 text-red-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M20 12H4"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {transaction.category}
+                          </h4>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              transaction.type === "income"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {transaction.type}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {transaction.description || "No description"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{formatDate(transaction.date)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {transaction.category}
-                        </h4>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right min-w-0">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            transaction.type === "income"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
+                          className={`text-lg font-semibold block truncate ${
+                            transaction.type === "income" ? "text-green-600" : "text-red-600"
                           }`}
+                          title={`${transaction.type === "income" ? "+" : "-"}${formatCurrency(
+                            transaction.amount
+                          )}`}
                         >
-                          {transaction.type}
+                          {transaction.type === "income" ? "+" : "-"}
+                          {formatCurrency(transaction.amount, true)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {transaction.description || "No description"}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">{formatDate(transaction.date)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right min-w-0">
-                      <span
-                        className={`text-lg font-semibold block truncate ${
-                          transaction.type === "income" ? "text-green-600" : "text-red-600"
-                        }`}
-                        title={`${transaction.type === "income" ? "+" : "-"}${formatCurrency(
-                          transaction.amount
-                        )}`}
-                      >
-                        {transaction.type === "income" ? "+" : "-"}
-                        {formatCurrency(transaction.amount, true)}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleEditTransaction(transaction)}
-                        className="p-1 text-gray-400 hover:text-blue-600 transition duration-200"
-                        title="Edit transaction"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleEditTransaction(transaction)}
+                          className="p-1 text-gray-400 hover:text-blue-600 transition duration-200"
+                          title="Edit transaction"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(transaction.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition duration-200"
-                        title="Delete transaction"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(transaction.id)}
+                          className="p-1 text-gray-400 hover:text-red-600 transition duration-200"
+                          title="Delete transaction"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -419,22 +511,69 @@ const HomePage = () => {
           mode={modalMode}
           transaction={editingTransaction}
           onClose={handleCloseModal}
-          onSubmit={(transaction) => {
+          onSubmit={async (formData) => {
             if (modalMode === "create") {
-              const newTransaction = {
-                ...transaction,
-                id: Date.now().toString(),
-              };
-              setTransactions((prev) => [newTransaction, ...prev]);
+              try {
+                const response = await fetch("/api/transaction/create", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    type: formData.type,
+                    date: formData.date,
+                    description: formData.description,
+                    categoryID: formData.categoryID,
+                    amount: formData.amount,
+                  }),
+                });
+
+                if (response.ok) {
+                  // Refresh transaction list from API
+                  fetchTransactions();
+                  toast.success("Transaction created successfully!");
+                } else {
+                  const errorData = await response.json();
+                  toast.error(errorData.message || "Failed to create transaction");
+                }
+              } catch (error) {
+                console.error("Error creating transaction:", error);
+                toast.error("Network error. Please try again.");
+              }
             } else {
-              setTransactions((prev) =>
-                prev.map((t) =>
-                  t.id === editingTransaction?.id
-                    ? { ...transaction, id: editingTransaction.id }
-                    : t
-                )
-              );
+              // Handle edit mode - PUT request to update transaction
+              try {
+                const response = await fetch(`/api/transaction/${editingTransaction?.id}`, {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    type: formData.type,
+                    amount: formData.amount,
+                    category: formData.category,
+                    description: formData.description,
+                    date: formData.date,
+                  }),
+                });
+
+                if (response.ok) {
+                  // Refresh transaction list from API
+                  fetchTransactions();
+                  toast.success("Transaction updated successfully!");
+                } else {
+                  const errorData = await response.json();
+                  toast.error(errorData.message || "Failed to update transaction");
+                }
+              } catch (error) {
+                console.error("Error updating transaction:", error);
+                toast.error("Network error. Please try again.");
+              }
             }
+            // Refresh summary after transaction changes
+            fetchSummary();
             handleCloseModal();
           }}
           isAnimating={isModalAnimating}
@@ -450,6 +589,7 @@ const HomePage = () => {
           onCancel={() => setDeleteConfirm(null)}
         />
       )}
+      <Toaster />
     </div>
   );
 };
@@ -459,9 +599,16 @@ interface TransactionModalProps {
   mode: "create" | "edit";
   transaction: Transaction | null;
   onClose: () => void;
-  onSubmit: (transaction: Omit<Transaction, "id">) => void;
+  onSubmit: (formData: {
+    type: string;
+    amount: number;
+    category: string;
+    categoryID: string;
+    description: string;
+    date: string;
+  }) => Promise<void>;
   isAnimating?: boolean;
-  categories: { name: string }[];
+  categories: { id: string; name: string }[];
   isLoadingCategories: boolean;
 }
 
@@ -474,34 +621,72 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   categories,
   isLoadingCategories,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     type: transaction?.type || ("expense" as "income" | "expense"),
     amount: transaction?.amount?.toString() || "",
     category: transaction?.category || "",
+    categoryID: "",
     description: transaction?.description || "",
     date: transaction?.date || new Date().toISOString().split("T")[0],
     currency: "THB" as const,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.amount || !formData.category) return;
+  // Update categoryID when editing and categories are loaded
+  React.useEffect(() => {
+    if (mode === "edit" && transaction?.category && categories.length > 0) {
+      const matchingCategory = categories.find((cat) => cat.name === transaction.category);
+      if (matchingCategory) {
+        setFormData((prev) => ({
+          ...prev,
+          categoryID: matchingCategory.id,
+        }));
+      }
+    }
+  }, [mode, transaction?.category, categories]);
 
-    onSubmit({
-      type: formData.type,
-      amount: parseFloat(formData.amount),
-      category: formData.category,
-      description: formData.description,
-      date: formData.date,
-      currency: formData.currency,
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // For edit mode, categoryID is not required since we can use the existing category
+    const requiredFieldsValid = formData.amount && formData.category;
+    const createModeValid = mode === "create" ? formData.categoryID : true;
+
+    if (!requiredFieldsValid || !createModeValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      // Convert date to ISO string format for API
+      const isoDate = new Date(formData.date).toISOString();
+
+      await onSubmit({
+        type: formData.type,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        categoryID: formData.categoryID,
+        description: formData.description,
+        date: isoDate,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "category") {
+      // When category changes, also update categoryID
+      const selectedCategory = categories.find((cat) => cat.name === value);
+      setFormData((prev) => ({
+        ...prev,
+        category: value,
+        categoryID: selectedCategory?.id || "",
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -646,7 +831,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   </option>
                   {!isLoadingCategories &&
                     categories.map((cat) => (
-                      <option key={cat.name} value={cat.name}>
+                      <option key={cat.id} value={cat.name}>
                         {cat.name}
                       </option>
                     ))}
@@ -712,18 +897,36 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!formData.amount || !formData.category || isLoadingCategories}
+            disabled={
+              !formData.amount ||
+              !formData.category ||
+              (mode === "create" && !formData.categoryID) ||
+              isLoadingCategories ||
+              isSubmitting
+            }
             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 active:scale-95 transform transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2 shadow-lg hover:shadow-xl"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>{mode === "create" ? "Add Transaction" : "Update Transaction"}</span>
+            {isSubmitting ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+            <span>
+              {isSubmitting
+                ? mode === "create"
+                  ? "Creating..."
+                  : "Updating..."
+                : mode === "create"
+                ? "Add Transaction"
+                : "Update Transaction"}
+            </span>
           </button>
         </div>
       </div>
