@@ -40,3 +40,7 @@ export interface IbodyLogin {
 export interface IbodyRegister extends Iuser {
   password: string;
 }
+
+export interface IresponseMiddleware {
+  username: string;
+}

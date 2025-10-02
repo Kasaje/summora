@@ -1,29 +1,19 @@
 import { userService } from "@/backend/service/userService";
 import { NextRequest, NextResponse } from "next/server";
-import jsonwebtoken from "jsonwebtoken";
+import { middleware } from "@/backend/middleware";
 
-export const POST = async (request: NextRequest) => {
+export const GET = async (request: NextRequest) => {
   try {
     console.log("========== START GET ME =============");
 
-    if (!process.env.JWT_SECRET) throw { message: "JWT_SECRET not set", status: 500 };
-
-    const token = request.cookies.get("accessToken")?.value;
-
-    if (!token) {
-      return NextResponse.json({ message: "Unauthorized: No token provided." }, { status: 401 });
-    }
-
-    const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET) as {
-      username: string;
-    };
-    const username = payload.username as string;
+    const { username } = await middleware(request);
 
     const user = await userService.getByUsername(username);
 
     console.log("========== END GET ME =============");
     return NextResponse.json(
       {
+        name: user?.name,
         username: user?.username,
         isActive: user?.isActive,
         createdAt: user?.createdAt,
