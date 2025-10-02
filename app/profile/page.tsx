@@ -39,9 +39,7 @@ export default function ProfilePage() {
             <div className="text-right">
               <span
                 className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                  user.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
+                  user.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                 }`}
               >
                 {user.isActive ? "Active" : "Inactive"}
@@ -56,16 +54,12 @@ export default function ProfilePage() {
             {/* Left Column */}
             <div className="space-y-4">
               <div className="text-center md:text-left">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                  {user.username}
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">{user.username}</h2>
                 {user.name && <p className="text-gray-600">{user.name}</p>}
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  Account Info
-                </h3>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Account Info</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Member Since:</span>
@@ -92,14 +86,11 @@ export default function ProfilePage() {
             {/* Right Column */}
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-700 mb-2">
-                  Quick Stats
-                </h3>
+                <h3 className="text-sm font-medium text-blue-700 mb-2">Quick Stats</h3>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
                     {Math.floor(
-                      (Date.now() - new Date(user.createdAt).getTime()) /
-                        (1000 * 60 * 60 * 24)
+                      (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
                     )}
                   </div>
                   <div className="text-xs text-blue-600">Days as member</div>

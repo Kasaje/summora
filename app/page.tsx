@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthProvider";
-import { Iuser } from "@/utils/interface";
+import { Iuser } from "@/backend/utils/interface";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");

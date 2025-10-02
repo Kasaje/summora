@@ -51,8 +51,7 @@ const HomePage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isModalAnimating, setIsModalAnimating] = useState(false);
 
@@ -61,10 +60,7 @@ const HomePage = () => {
   const exchangeRates = { USD: 1, THB: 36.5 }; // 1 USD = 36.5 THB (approximate)
 
   // Convert amount to base currency for calculations
-  const convertToBaseCurrency = (
-    amount: number,
-    fromCurrency: "USD" | "THB"
-  ) => {
+  const convertToBaseCurrency = (amount: number, fromCurrency: "USD" | "THB") => {
     if (fromCurrency === baseCurrency) return amount;
     if (baseCurrency === "USD" && fromCurrency === "THB") {
       return amount / exchangeRates.THB;
@@ -162,24 +158,17 @@ const HomePage = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Dashboard
-              </h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
               <p className="text-gray-600">
-                Welcome back, {user?.name}! Here&apos;s your accounting
-                overview.
+                Welcome back, {user?.name}! Here&apos;s your accounting overview.
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Base Currency:
-                </label>
+                <label className="text-sm font-medium text-gray-700">Base Currency:</label>
                 <select
                   value={baseCurrency}
-                  onChange={(e) =>
-                    setBaseCurrency(e.target.value as "USD" | "THB")
-                  }
+                  onChange={(e) => setBaseCurrency(e.target.value as "USD" | "THB")}
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="USD">USD ($)</option>
@@ -191,12 +180,7 @@ const HomePage = () => {
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 active:scale-95 transform transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl"
               >
                 <div className="bg-white/20 rounded-lg p-1">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -216,9 +200,7 @@ const HomePage = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0 pr-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Income
-                </p>
+                <p className="text-sm font-medium text-gray-600">Total Income</p>
                 <p
                   className="text-2xl lg:text-3xl font-bold text-green-600 truncate"
                   title={formatCurrency(totalIncome, baseCurrency)}
@@ -250,9 +232,7 @@ const HomePage = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0 pr-4">
-                <p className="text-sm font-medium text-gray-600">
-                  Total Expenses
-                </p>
+                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
                 <p
                   className="text-2xl lg:text-3xl font-bold text-red-600 truncate"
                   title={formatCurrency(totalExpense, baseCurrency)}
@@ -270,12 +250,7 @@ const HomePage = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20 12H4"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
               </div>
             </div>
@@ -293,9 +268,7 @@ const HomePage = () => {
                 >
                   {formatCurrency(netBalance, baseCurrency, true)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Exchange rate: 1 USD = 36.5 THB
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Exchange rate: 1 USD = 36.5 THB</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -319,9 +292,7 @@ const HomePage = () => {
         {/* Transaction List */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recent Transactions
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
           </div>
           <div className="divide-y divide-gray-200">
             {transactions.map((transaction) => (
@@ -333,9 +304,7 @@ const HomePage = () => {
                   <div className="flex items-center space-x-4">
                     <div
                       className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        transaction.type === "income"
-                          ? "bg-green-100"
-                          : "bg-red-100"
+                        transaction.type === "income" ? "bg-green-100" : "bg-red-100"
                       }`}
                     >
                       {transaction.type === "income" ? (
@@ -386,32 +355,22 @@ const HomePage = () => {
                       <p className="text-sm text-gray-600 mt-1">
                         {transaction.description || "No description"}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatDate(transaction.date)}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(transaction.date)}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right min-w-0">
                       <span
                         className={`text-lg font-semibold block truncate ${
-                          transaction.type === "income"
-                            ? "text-green-600"
-                            : "text-red-600"
+                          transaction.type === "income" ? "text-green-600" : "text-red-600"
                         }`}
-                        title={`${
-                          transaction.type === "income" ? "+" : "-"
-                        }${formatCurrency(
+                        title={`${transaction.type === "income" ? "+" : "-"}${formatCurrency(
                           transaction.amount,
                           transaction.currency
                         )}`}
                       >
                         {transaction.type === "income" ? "+" : "-"}
-                        {formatCurrency(
-                          transaction.amount,
-                          transaction.currency,
-                          true
-                        )}
+                        {formatCurrency(transaction.amount, transaction.currency, true)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
@@ -555,9 +514,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -580,9 +537,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-gray-900">
-                {mode === "create"
-                  ? "✨ Add New Transaction"
-                  : "📝 Edit Transaction"}
+                {mode === "create" ? "✨ Add New Transaction" : "📝 Edit Transaction"}
               </h3>
               <p className="text-xs text-gray-600 mt-1">
                 {mode === "create"
@@ -724,10 +679,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <div className="space-y-4">
               {/* Date */}
               <div>
-                <label
-                  htmlFor="date"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
+                <label htmlFor="date" className="block text-sm font-semibold text-gray-700 mb-2">
                   � Date *
                 </label>
                 <input
@@ -769,12 +721,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 active:scale-95 transform transition-all duration-200 flex items-center space-x-2"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -786,17 +733,10 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={
-              !formData.amount || !formData.category || !formData.currency
-            }
+            disabled={!formData.amount || !formData.category || !formData.currency}
             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 active:scale-95 transform transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2 shadow-lg hover:shadow-xl"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -804,9 +744,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            <span>
-              {mode === "create" ? "Add Transaction" : "Update Transaction"}
-            </span>
+            <span>{mode === "create" ? "Add Transaction" : "Update Transaction"}</span>
           </button>
         </div>
       </div>
@@ -820,20 +758,14 @@ interface DeleteConfirmModalProps {
   onCancel: () => void;
 }
 
-const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
-  onConfirm,
-  onCancel,
-}) => {
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({ onConfirm, onCancel }) => {
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4">
         <div className="px-6 py-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Delete Transaction
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Transaction</h3>
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete this transaction? This action cannot
-            be undone.
+            Are you sure you want to delete this transaction? This action cannot be undone.
           </p>
         </div>
         <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">

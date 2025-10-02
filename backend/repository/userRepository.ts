@@ -1,9 +1,5 @@
-import { Iuser } from "@/utils/interface";
-import {
-  transactionCategoryConnection,
-  transactionConnection,
-  userConnection,
-} from "../lib/index";
+import { Iuser } from "@/backend/utils/interface";
+import { transactionCategoryConnection, transactionConnection, userConnection } from "../lib/index";
 
 export const userRepository = {
   async getByUsername(username: string) {
@@ -11,12 +7,14 @@ export const userRepository = {
   },
 
   async create(userInfo: Iuser) {
-    await userConnection.insertOne({
+    const newUser = await userConnection.insertOne({
       ...userInfo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isActive: true,
     });
+
+    return newUser;
   },
 
   async update(username: string, updateInfo: Iuser) {
@@ -25,7 +23,7 @@ export const userRepository = {
 
   async delete(username: string) {
     await userConnection.deleteOne({ username });
-    await transactionConnection.deleteMany({ userId: username });
-    await transactionCategoryConnection.deleteMany({ userId: username });
+    await transactionConnection.deleteMany({ userID: username });
+    await transactionCategoryConnection.deleteMany({ userID: username });
   },
 };

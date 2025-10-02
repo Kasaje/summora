@@ -1,15 +1,8 @@
 "use client";
 
-import { Iuser } from "@/utils/interface";
+import { Iuser } from "@/backend/utils/interface";
 import { useRouter } from "next/navigation";
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useState, useCallback } from "react";
 
 interface AuthContextType {
   user: Iuser | null;
@@ -72,11 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkLogin();
   }, [checkLogin]);
 
-  return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuthActions = () => {

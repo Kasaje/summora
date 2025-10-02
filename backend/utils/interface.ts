@@ -20,7 +20,7 @@ export interface Itransaction {
   updatedAt: string;
 
   // Relational
-  userId: string;
+  userID: string;
 }
 
 export interface ItransactionCategory {
@@ -29,5 +29,14 @@ export interface ItransactionCategory {
   updatedAt: string;
 
   // Relational
-  userId: string;
+  userID: string;
+}
+
+export interface IbodyLogin {
+  username: string;
+  password: string;
+}
+
+export interface IbodyRegister extends Iuser {
+  password: string;
 }

@@ -1,4 +1,4 @@
-import { userRepository } from "@/repository/userRepository";
+import { userRepository } from "@/backend/repository/userRepository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 

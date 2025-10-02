@@ -15,10 +15,7 @@ const Navbar = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
@@ -98,9 +95,7 @@ const Navbar = () => {
                 </svg>
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.name}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500">@{user?.username}</p>
               </div>
               <svg
@@ -127,9 +122,7 @@ const Navbar = () => {
                 <div className="py-1">
                   {/* User Info Header */}
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user?.name}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">@{user?.username}</p>
                   </div>
 
