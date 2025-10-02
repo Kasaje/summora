@@ -1,18 +1,25 @@
-import { transactionCategoryRepository } from "@/backend/repository/transactionCategoryRepository";
-import { ItransactionCategory } from "@/backend/utils/interface";
+import { ItransactionCategory, ItransactionCategoryRepository } from "@/backend/utils/interface";
 
-export class TransactioncategoryService {
-  constructor() {}
+export class TransactioncategoryService implements ItransactionCategoryRepository {
+  constructor(private transactionCategoryRepository: ItransactionCategoryRepository) {}
 
-  async listByuserID(userID: string) {
-    return await transactionCategoryRepository.listByuserID(userID);
+  async initializeDefaultCategories(userID: string) {
+    await this.transactionCategoryRepository.initializeDefaultCategories(userID);
+  }
+
+  async listByUserID(userID: string) {
+    return await this.transactionCategoryRepository.listByUserID(userID);
   }
 
   async create(userID: string, info: ItransactionCategory) {
-    await transactionCategoryRepository.create(userID, info);
+    await this.transactionCategoryRepository.create(userID, info);
+  }
+
+  async update(id: string, updateInfo: ItransactionCategory) {
+    await this.transactionCategoryRepository.update(id, updateInfo);
   }
 
   async delete(id: string) {
-    await transactionCategoryRepository.delete(id);
+    await this.transactionCategoryRepository.delete(id);
   }
 }

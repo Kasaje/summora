@@ -1,9 +1,10 @@
-import { authService } from "@/backend/service/authSertvice";
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { generateAPIResponse, getBody } from "@/backend/utils/function";
 import { IbodyLogin } from "@/backend/utils/interface";
 import { CustomError } from "@/backend/utils/customError";
+import { AuthService } from "@/backend/service/authSertvice";
+import { UserRepository } from "@/backend/repository/userRepository";
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -11,6 +12,10 @@ export const POST = async (request: NextRequest) => {
 
     const body = await getBody<IbodyLogin>(request);
     const { username, password } = body;
+
+    // Initialize repository and service
+    const userRepository = new UserRepository();
+    const authService = new AuthService(userRepository);
 
     const { accessToken, refreshToken } = await authService.login(username, password);
 

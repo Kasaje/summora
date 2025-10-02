@@ -9,7 +9,8 @@ export const middleware = async (request: NextRequest): Promise<IresponseMiddlew
   if (!process.env.JWT_SECRET) throw new CustomError("JWT_SECRET not set", 500);
   if (!token) throw new CustomError("Unauthorized: No token provided.", 401);
   const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET) as {
+    id: string;
     username: string;
   };
-  return { username: payload.username };
+  return { id: payload.id, username: payload.username };
 };
