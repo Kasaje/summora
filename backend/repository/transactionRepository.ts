@@ -1,4 +1,5 @@
 import {
+  Isummary,
   Itransaction,
   ItransactionCategoryRepository,
   ItransactionRepository,
@@ -55,6 +56,27 @@ export class TransactionRepository implements ItransactionRepository {
 
   async delete(id: string): Promise<void> {
     await transactionConnection.deleteOne({ _id: new ObjectId(id) });
+  }
+
+  async summary(userID: string): Promise<Isummary> {
+    const income = await transactionConnection
+      .aggregate([
+        { $match: { userID, type: "income" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ])
+      .toArray();
+    const expense = await transactionConnection
+      .aggregate([
+        { $match: { userID, type: "expense" } },
+        { $group: { _id: null, total: { $sum: "$amount" } } },
+      ])
+      .toArray();
+
+    return {
+      income: income[0]?.total || 0,
+      expense: expense[0]?.total || 0,
+      balance: (income[0]?.total || 0) - (expense[0]?.total || 0),
+    };
   }
 
   private map(data: Itransaction & { _id: ObjectId }): Itransaction & { id: string } {

@@ -1,5 +1,6 @@
 import { CustomError } from "../utils/customError";
 import {
+  Isummary,
   Itransaction,
   ItransactionCategoryRepository,
   ItransactionRepository,
@@ -44,5 +45,9 @@ export class TransactionService implements ItransactionRepository {
 
   async delete(id: string): Promise<void> {
     await this.transactionRepository.delete(id);
+  }
+
+  async summary(userID: string): Promise<Isummary> {
+    return await this.transactionRepository.summary(userID);
   }
 }

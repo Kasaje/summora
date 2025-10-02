@@ -13,14 +13,15 @@ export const GET = async (req: NextRequest, { params }: IparamTransaction) => {
 
     const { id } = await middleware(req);
 
-    const { id: transactionID } = params;
+    const transactionID = params.id;
 
     const transactionCategoryRepository = new TransactionCategoryRepository();
     const transactionRepository = new TransactionRepository();
     const transactionService = new TransactionService(transactionRepository);
 
     let response;
-    if (!transactionID || transactionID === "list")
+    if (transactionID === "summary") response = await transactionService.summary(id);
+    else if (!transactionID || transactionID === "list")
       response = await transactionService.listByUserID(id, transactionCategoryRepository);
     else response = await transactionService.getByID(transactionID);
 

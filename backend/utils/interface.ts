@@ -76,6 +76,13 @@ export interface ItransactionRepository {
   create(userID: string, info: Partial<Itransaction>): Promise<void>;
   update(id: string, updateInfo: Partial<Itransaction>): Promise<void>;
   delete(id: string): Promise<void>;
+  summary(userID: string): Promise<Isummary>;
+}
+
+export interface Isummary {
+  income: number;
+  expense: number;
+  balance: number;
 }
 
 export interface IauthService {
