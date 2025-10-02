@@ -95,8 +95,13 @@ const Navbar = () => {
                 </svg>
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">@{user?.username}</p>
+                <span
+                  className="text-sm font-medium text-gray-900 truncate max-w-32 inline-block"
+                  title={user?.name}
+                >
+                  {user?.name}
+                </span>
+                <span className="text-xs text-gray-500 ml-2">@{user?.username}</span>
               </div>
               <svg
                 className={`w-4 h-4 transition-transform duration-200 ${
@@ -118,12 +123,22 @@ const Navbar = () => {
 
             {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                 <div className="py-1">
                   {/* User Info Header */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                    <p className="text-xs text-gray-500">@{user?.username}</p>
+                  <div className="px-3 py-2 border-b border-gray-100">
+                    <p
+                      className="text-sm font-medium text-gray-900 truncate max-w-full"
+                      title={user?.name}
+                    >
+                      {user?.name}
+                    </p>
+                    <p
+                      className="text-xs text-gray-500 truncate max-w-full"
+                      title={`@${user?.username}`}
+                    >
+                      @{user?.username}
+                    </p>
                   </div>
 
                   {/* Menu Items */}

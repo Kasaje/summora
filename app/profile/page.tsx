@@ -2,10 +2,58 @@
 
 import { useAuth } from "@/context/AuthProvider";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(user?.name || "");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/user", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: editName }),
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        // Update the user in context
+        if (user) {
+          setUser({ ...user, name: editName });
+        }
+        setIsEditing(false);
+        toast.success(responseData?.message || "Profile updated successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to update profile");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditClick = () => {
+    setEditName(user?.name || "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditName(user?.name || "");
+    setIsEditing(false);
+  };
 
   if (user === null) {
     return (
@@ -105,9 +153,7 @@ export default function ProfilePage() {
                   Home
                 </button>
                 <button
-                  onClick={() => {
-                    alert("Edit profile functionality coming soon!");
-                  }}
+                  onClick={handleEditClick}
                   className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-200"
                 >
                   Edit
@@ -117,6 +163,53 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Edit Profile</h3>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="px-6 py-4">
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your name"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-200"
+                  disabled={isLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      <Toaster />
     </div>
   );
 }
