@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthProvider";
 import Navbar from "../../components/Navbar";
 
@@ -11,7 +11,7 @@ interface Transaction {
   category: string;
   description: string;
   date: string;
-  currency: "USD" | "THB";
+  currency: "THB";
 }
 
 const HomePage = () => {
@@ -23,20 +23,20 @@ const HomePage = () => {
     {
       id: "1",
       type: "income",
-      amount: 3000,
+      amount: 120000,
       category: "Salary",
       description: "Monthly salary",
       date: "2025-09-20",
-      currency: "USD",
+      currency: "THB",
     },
     {
       id: "2",
       type: "expense",
-      amount: 150,
+      amount: 5500,
       category: "Food",
       description: "Groceries",
       date: "2025-09-19",
-      currency: "USD",
+      currency: "THB",
     },
     {
       id: "3",
@@ -54,57 +54,65 @@ const HomePage = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isModalAnimating, setIsModalAnimating] = useState(false);
+  const [categories, setCategories] = useState<{ name: string }[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
-  // Currency state and conversion rates
-  const [baseCurrency, setBaseCurrency] = useState<"USD" | "THB">("USD");
-  const exchangeRates = { USD: 1, THB: 36.5 }; // 1 USD = 36.5 THB (approximate)
+  // All amounts are in THB (Thai Baht)
 
-  // Convert amount to base currency for calculations
-  const convertToBaseCurrency = (amount: number, fromCurrency: "USD" | "THB") => {
-    if (fromCurrency === baseCurrency) return amount;
-    if (baseCurrency === "USD" && fromCurrency === "THB") {
-      return amount / exchangeRates.THB;
-    }
-    if (baseCurrency === "THB" && fromCurrency === "USD") {
-      return amount * exchangeRates.THB;
-    }
-    return amount;
-  };
-
-  // Calculate totals in base currency
+  // Calculate totals in THB
   const totalIncome = transactions
     .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + convertToBaseCurrency(t.amount, t.currency), 0);
+    .reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = transactions
     .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + convertToBaseCurrency(t.amount, t.currency), 0);
+    .reduce((sum, t) => sum + t.amount, 0);
   const netBalance = totalIncome - totalExpense;
 
-  const formatCurrency = (
-    amount: number,
-    currency: "USD" | "THB" = baseCurrency,
-    compact: boolean = false
-  ) => {
-    const currencyMap = {
-      USD: { code: "USD", symbol: "$" },
-      THB: { code: "THB", symbol: "฿" },
-    };
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const response = await fetch("/api/categories/list", {
+        method: "GET",
+        credentials: "include",
+      });
 
+      if (response.ok) {
+        const categoryData = await response.json();
+        setCategories(categoryData || []);
+      } else {
+        console.error("Failed to fetch categories");
+        setCategories([]);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setCategories([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  // Fetch categories when user arrives at home page (background loading)
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const formatCurrency = (amount: number, compact: boolean = false) => {
     // For very large numbers, use compact notation
     if (compact && Math.abs(amount) >= 1000000) {
-      return new Intl.NumberFormat("en-US", {
+      return new Intl.NumberFormat("th-TH", {
         style: "currency",
-        currency: currencyMap[currency].code,
+        currency: "THB",
         currencyDisplay: "symbol",
         notation: "compact",
         maximumFractionDigits: 1,
       }).format(amount);
     }
 
-    // For large numbers but not compact mode, add thousand separators
-    return new Intl.NumberFormat("en-US", {
+    // For regular numbers, add thousand separators
+    return new Intl.NumberFormat("th-TH", {
       style: "currency",
-      currency: currencyMap[currency].code,
+      currency: "THB",
       currencyDisplay: "symbol",
       maximumFractionDigits: 2,
     }).format(amount);
@@ -164,17 +172,6 @@ const HomePage = () => {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Base Currency:</label>
-                <select
-                  value={baseCurrency}
-                  onChange={(e) => setBaseCurrency(e.target.value as "USD" | "THB")}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="USD">USD ($)</option>
-                  <option value="THB">THB (฿)</option>
-                </select>
-              </div>
               <button
                 onClick={handleCreateTransaction}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 active:scale-95 transform transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl"
@@ -203,13 +200,11 @@ const HomePage = () => {
                 <p className="text-sm font-medium text-gray-600">Total Income</p>
                 <p
                   className="text-2xl lg:text-3xl font-bold text-green-600 truncate"
-                  title={formatCurrency(totalIncome, baseCurrency)}
+                  title={formatCurrency(totalIncome)}
                 >
-                  {formatCurrency(totalIncome, baseCurrency, true)}
+                  {formatCurrency(totalIncome, true)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  All amounts converted to {baseCurrency}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">All amounts in Thai Baht (THB)</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -235,13 +230,11 @@ const HomePage = () => {
                 <p className="text-sm font-medium text-gray-600">Total Expenses</p>
                 <p
                   className="text-2xl lg:text-3xl font-bold text-red-600 truncate"
-                  title={formatCurrency(totalExpense, baseCurrency)}
+                  title={formatCurrency(totalExpense)}
                 >
-                  {formatCurrency(totalExpense, baseCurrency, true)}
+                  {formatCurrency(totalExpense, true)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  All amounts converted to {baseCurrency}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">All amounts in Thai Baht (THB)</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -264,11 +257,11 @@ const HomePage = () => {
                   className={`text-2xl lg:text-3xl font-bold truncate ${
                     netBalance >= 0 ? "text-green-600" : "text-red-600"
                   }`}
-                  title={formatCurrency(netBalance, baseCurrency)}
+                  title={formatCurrency(netBalance)}
                 >
-                  {formatCurrency(netBalance, baseCurrency, true)}
+                  {formatCurrency(netBalance, true)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Exchange rate: 1 USD = 36.5 THB</p>
+                <p className="text-xs text-gray-500 mt-1">Thai Baht (฿) - Official Currency</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -365,12 +358,11 @@ const HomePage = () => {
                           transaction.type === "income" ? "text-green-600" : "text-red-600"
                         }`}
                         title={`${transaction.type === "income" ? "+" : "-"}${formatCurrency(
-                          transaction.amount,
-                          transaction.currency
+                          transaction.amount
                         )}`}
                       >
                         {transaction.type === "income" ? "+" : "-"}
-                        {formatCurrency(transaction.amount, transaction.currency, true)}
+                        {formatCurrency(transaction.amount, true)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 flex-shrink-0">
@@ -446,6 +438,8 @@ const HomePage = () => {
             handleCloseModal();
           }}
           isAnimating={isModalAnimating}
+          categories={categories}
+          isLoadingCategories={isLoadingCategories}
         />
       )}
 
@@ -467,6 +461,8 @@ interface TransactionModalProps {
   onClose: () => void;
   onSubmit: (transaction: Omit<Transaction, "id">) => void;
   isAnimating?: boolean;
+  categories: { name: string }[];
+  isLoadingCategories: boolean;
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({
@@ -475,6 +471,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   onClose,
   onSubmit,
   isAnimating = false,
+  categories,
+  isLoadingCategories,
 }) => {
   const [formData, setFormData] = useState({
     type: transaction?.type || ("expense" as "income" | "expense"),
@@ -482,22 +480,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     category: transaction?.category || "",
     description: transaction?.description || "",
     date: transaction?.date || new Date().toISOString().split("T")[0],
-    currency: transaction?.currency || ("USD" as "USD" | "THB"),
+    currency: "THB" as const,
   });
-
-  const categories = {
-    income: ["Salary", "Freelance", "Investment", "Gift", "Other"],
-    expense: [
-      "Food",
-      "Transportation",
-      "Shopping",
-      "Bills",
-      "Entertainment",
-      "Health",
-      "Education",
-      "Other",
-    ],
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -528,7 +512,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 transform transition-all duration-300 ${
+        className={`bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 transform transition-all duration-300 relative ${
           isAnimating ? "scale-95 opacity-0" : "scale-100 opacity-100"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -633,19 +617,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     htmlFor="currency"
                     className="block text-sm font-semibold text-gray-700 mb-2"
                   >
-                    🌍 Currency *
+                    �🇭 Currency
                   </label>
-                  <select
-                    id="currency"
-                    name="currency"
-                    value={formData.currency}
-                    onChange={handleChange}
-                    required
-                    className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-gray-400 bg-white"
-                  >
-                    <option value="USD">💵 USD ($)</option>
-                    <option value="THB">🇹🇭 THB (฿)</option>
-                  </select>
+                  <div className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-600 font-medium">
+                    THB (฿) - Thai Baht
+                  </div>
                 </div>
               </div>
 
@@ -665,12 +641,15 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   required
                   className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 hover:border-gray-400 bg-white"
                 >
-                  <option value="">Choose a category...</option>
-                  {categories[formData.type].map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
+                  <option value="" hidden>
+                    {isLoadingCategories ? "Loading categories..." : "Choose a category..."}
+                  </option>
+                  {!isLoadingCategories &&
+                    categories.map((cat) => (
+                      <option key={cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
@@ -733,7 +712,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!formData.amount || !formData.category || !formData.currency}
+            disabled={!formData.amount || !formData.category || isLoadingCategories}
             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-blue-800 active:scale-95 transform transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center space-x-2 shadow-lg hover:shadow-xl"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
