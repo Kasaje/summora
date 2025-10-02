@@ -1,9 +1,10 @@
-import { ItransactionCategory } from "@/backend/utils/interface";
-import { transactionCategoryConnection } from "../lib/index";
-import { ObjectId } from "mongodb";
+import { Iuser } from "@/backend/utils/interface";
+import { transactionCategoryConnection, transactionConnection, userConnection } from "../lib/index";
 
-export const transactionCategoryRepository = {
-  async initializeDefaultCategoriees(userID: string) {
+export class TransactionCategoryRepository {
+  constructor() {}
+
+  async initializeDefaultCategories(userID: string) {
     const categories = ["อาหาร", "เดินทาง", "บันเทิง", "ช็อปปิ้ง", "อื่นๆ"];
     await transactionCategoryConnection.insertMany(
       categories.map((name) => ({
@@ -13,28 +14,29 @@ export const transactionCategoryRepository = {
         userID,
       }))
     );
-  },
+  }
 
-  async listByuserID(userID: string) {
+  async listByUserID(userID: string) {
     return await transactionCategoryConnection.find({ userID }).toArray();
-  },
+  }
 
-  async create(userID: string, info: ItransactionCategory) {
-    await transactionCategoryConnection.insertOne({
-      ...info,
+  async create(userInfo: Iuser) {
+    const newUser = await userConnection.insertOne({
+      ...userInfo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-
-      // Relational
-      userID,
+      isActive: true,
     });
-  },
+    return newUser;
+  }
 
-  async update(id: string, updateInfo: ItransactionCategory) {
-    await transactionCategoryConnection.updateOne({ _id: new ObjectId(id) }, { $set: updateInfo });
-  },
+  async update(username: string, updateInfo: Iuser) {
+    await userConnection.updateOne({ username }, { $set: updateInfo });
+  }
 
-  async delete(id: string) {
-    await transactionCategoryConnection.deleteOne({ _id: new ObjectId(id) });
-  },
-};
+  async delete(username: string) {
+    await userConnection.deleteOne({ username });
+    await transactionConnection.deleteMany({ userID: username });
+    await transactionCategoryConnection.deleteMany({ userID: username });
+  }
+}

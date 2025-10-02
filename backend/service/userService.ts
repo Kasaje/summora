@@ -1,30 +1,43 @@
-import { Iuser } from "@/backend/utils/interface";
 import bcrypt from "bcrypt";
-import { userRepository } from "@/backend/repository/userRepository";
-import { transactionCategoryRepository } from "@/backend/repository/transactionCategoryRepository";
+import { ItransactionCategoryRepository, Iuser, IuserRepository } from "../utils/interface";
 
-export const userService = {
-  async register(username: string, password: string, info: Iuser): Promise<void> {
-    const user = await userRepository.getByUsername(username);
+export class UserService implements IuserRepository {
+  constructor(private userRepository: IuserRepository) {}
+
+  async register(
+    transactionCategoryRepository: ItransactionCategoryRepository,
+    username: string,
+    password: string,
+    info: Iuser
+  ): Promise<void> {
+    const user = await this.userRepository.getByUsername(username);
 
     if (user) throw { message: "Username already exists.", status: 400 };
 
     const passwordHash = await bcrypt.hash(password, 12);
-    const newUser = await userRepository.create({
+    const newUser = await this.userRepository.create({
       ...info,
       username,
       passwordHash,
     });
 
     const userID = newUser.insertedId.toString();
-    await transactionCategoryRepository.initializeDefaultCategoriees(userID);
-  },
+    await transactionCategoryRepository.initializeDefaultCategories(userID);
+  }
 
-  async getByUsername(username: string): Promise<Iuser | null> {
-    return userRepository.getByUsername(username);
-  },
+  async getByUsername(username: string) {
+    return await this.userRepository.getByUsername(username);
+  }
 
-  async delete(username: string): Promise<void> {
-    await userRepository.delete(username);
-  },
-};
+  async create(info: Iuser) {
+    return await this.userRepository.create(info);
+  }
+
+  async update(username: string, updateInfo: Iuser) {
+    await this.userRepository.update(username, updateInfo);
+  }
+
+  async delete(username: string) {
+    await this.userRepository.delete(username);
+  }
+}
