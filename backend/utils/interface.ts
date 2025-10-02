@@ -49,16 +49,17 @@ export interface IresponseMiddleware {
 }
 
 export interface ItransactionCategoryRepository {
+  getByID(id: string): Promise<ItransactionCategory | null>;
   initializeDefaultCategories(userID: string): Promise<void>;
   listByUserID(userID: string): Promise<ItransactionCategory[]>;
-  create(userID: string, info: ItransactionCategory): Promise<void>;
-  update(id: string, updateInfo: ItransactionCategory): Promise<void>;
-  delete(id: string): Promise<void>;
+  create(userID: string, info: Partial<ItransactionCategory>): Promise<void>;
+  update(id: string, updateInfo: Partial<ItransactionCategory>): Promise<void>;
+  delete(id: string, transactionRepository: ItransactionRepository): Promise<void>;
 }
 
 export interface IuserRepository {
   getByUsername(username: string): Promise<Iuser | null>;
-  create(info: Iuser): Promise<{ insertedId: ObjectId }>;
+  create(info: Partial<Iuser>): Promise<{ insertedId: ObjectId }>;
   update(username: string, updateInfo: Iuser): Promise<void>;
   delete(username: string): Promise<void>;
 }
@@ -71,4 +72,27 @@ export interface IauthService {
 export interface IresponseLogin {
   accessToken: string;
   refreshToken: string;
+}
+
+export interface IparamCategory {
+  params: {
+    id: string;
+  };
+}
+
+export interface IbodyCreateCategory {
+  name: string;
+}
+
+export interface IbodyUpdateCategory {
+  name: string;
+}
+
+export interface ItransactionRepository {
+  getById(id: string): Promise<Itransaction | null>;
+  listByUserID(userID: string): Promise<Itransaction[]>;
+  listByCategoryID(categoryID: string): Promise<Itransaction[]>;
+  create(userID: string, info: Partial<Itransaction>): Promise<void>;
+  update(id: string, updateInfo: Partial<Itransaction>): Promise<void>;
+  delete(id: string): Promise<void>;
 }

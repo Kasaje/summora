@@ -8,7 +8,7 @@ export class UserService implements IuserRepository {
     transactionCategoryRepository: ItransactionCategoryRepository,
     username: string,
     password: string,
-    info: Iuser
+    info: Partial<Iuser>
   ): Promise<void> {
     const user = await this.userRepository.getByUsername(username);
 

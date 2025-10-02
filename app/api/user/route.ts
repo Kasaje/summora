@@ -1,5 +1,7 @@
 import { middleware } from "@/backend/middleware";
+import { TransactionCategoryRepository } from "@/backend/repository/transactionCategoryRepository";
 import { UserRepository } from "@/backend/repository/userRepository";
+import { UserService } from "@/backend/service/userService";
 import { CustomError } from "@/backend/utils/customError";
 
 import { generateAPIResponse } from "@/backend/utils/function";
@@ -77,6 +79,36 @@ export const DELETE = async (req: NextRequest) => {
     return generateAPIResponse({ message: "User deleted successfully." }, 200);
   } catch (error) {
     console.log("========== ERROR DELETE USER =============", error);
+    if (error instanceof CustomError)
+      return generateAPIResponse({ message: error.message }, error.status);
+    return generateAPIResponse(
+      { message: (error as { message: string }).message || "Internal Server Error" },
+      (error as { status: number }).status || 500
+    );
+  }
+};
+
+export const POST = async (req: NextRequest) => {
+  try {
+    console.log("========== START CREATE USER =============");
+
+    const body = await req.json();
+    const { name, username, password } = body;
+
+    if (!name) throw new CustomError("Name is required", 400);
+    if (!username) throw new CustomError("Username is required", 400);
+    if (!password) throw new CustomError("Password is required", 400);
+
+    const transactionCategoryRepository = new TransactionCategoryRepository();
+    const userRepository = new UserRepository();
+    const userService = new UserService(userRepository);
+
+    await userService.register(transactionCategoryRepository, username, password, { name });
+
+    console.log("========== END CREATE USER =============");
+    return generateAPIResponse({ message: "User created successfully." }, 201);
+  } catch (error) {
+    console.log("========== ERROR CREATE USER =============", error);
     if (error instanceof CustomError)
       return generateAPIResponse({ message: error.message }, error.status);
     return generateAPIResponse(

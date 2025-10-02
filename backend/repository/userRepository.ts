@@ -21,7 +21,8 @@ export class UserRepository {
   }
 
   async update(username: string, updateInfo: Iuser): Promise<void> {
-    await userConnection.updateOne({ username }, { $set: updateInfo });
+    const updateData = { ...updateInfo, updatedAt: new Date().toISOString() };
+    await userConnection.updateOne({ username }, { $set: updateData });
   }
 
   async delete(username: string): Promise<void> {
