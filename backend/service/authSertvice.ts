@@ -43,6 +43,7 @@ export class AuthService implements IauthService {
       if (payload.type !== "access") throw { message: "Invalid token type.", status: 401 };
       return { id: payload.id, username: payload.username };
     } catch (error) {
+      console.log("error", error);
       throw { message: "Invalid or expired token.", status: 401 };
     }
   }
