@@ -2,7 +2,7 @@
 
 import { useAuth, useAuthActions } from "@/context/AuthProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function SettingPage() {
