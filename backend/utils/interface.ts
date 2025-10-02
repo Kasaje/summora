@@ -15,14 +15,15 @@ export interface Iuser {
 export interface Itransaction {
   type: EtransactionType;
   date: string;
-  category: string;
   description: string;
   amount: number;
   createdAt: string;
   updatedAt: string;
+  categoryName?: string;
 
   // Relational
   userID: string;
+  categoryID: string;
 }
 
 export interface ItransactionCategory {
@@ -64,6 +65,18 @@ export interface IuserRepository {
   delete(username: string): Promise<void>;
 }
 
+export interface ItransactionRepository {
+  getByID(id: string): Promise<Itransaction | null>;
+  listByUserID(
+    userID: string,
+    transactionCategoryRepository: ItransactionCategoryRepository
+  ): Promise<Itransaction[]>;
+  listByCategoryID(categoryID: string): Promise<Itransaction[]>;
+  create(userID: string, info: Partial<Itransaction>): Promise<void>;
+  update(id: string, updateInfo: Partial<Itransaction>): Promise<void>;
+  delete(id: string): Promise<void>;
+}
+
 export interface IauthService {
   login(username: string, password: string): Promise<IresponseLogin>;
   verifyToken(token: string): Promise<IresponseMiddleware>;
@@ -88,11 +101,8 @@ export interface IbodyUpdateCategory {
   name: string;
 }
 
-export interface ItransactionRepository {
-  getById(id: string): Promise<Itransaction | null>;
-  listByUserID(userID: string): Promise<Itransaction[]>;
-  listByCategoryID(categoryID: string): Promise<Itransaction[]>;
-  create(userID: string, info: Partial<Itransaction>): Promise<void>;
-  update(id: string, updateInfo: Partial<Itransaction>): Promise<void>;
-  delete(id: string): Promise<void>;
+export interface IparamTransaction {
+  params: {
+    id: string;
+  };
 }
