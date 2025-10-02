@@ -1,17 +1,19 @@
-import { userService } from "@/service/userService";
+import { userService } from "@/backend/service/userService";
+import { CustomError } from "@/backend/utils/customError";
+import { generateAPIResponse, getBody } from "@/backend/utils/function";
+import { IbodyRegister } from "@/backend/utils/interface";
 import { NextRequest, NextResponse } from "next/server";
 
 export const POST = async (request: NextRequest) => {
   try {
     console.log("========== START REGISTER =============");
 
-    const { username, password, name } = await request.json();
+    const { username, password, name } = await getBody<IbodyRegister>(request);
 
     if (!username || !password || !name) {
-      return NextResponse.json(
-        JSON.stringify({ message: "Missing required fields." }),
-        { status: 400 }
-      );
+      return NextResponse.json(JSON.stringify({ message: "Missing required fields." }), {
+        status: 400,
+      });
     }
 
     await userService.register(username, password, {
@@ -19,26 +21,20 @@ export const POST = async (request: NextRequest) => {
       name,
       passwordHash: "",
       isLogin: false,
-      status: true,
+      isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
     console.log("========== END REGISTER =============");
-    return NextResponse.json(
-      { message: "User registered." },
-      {
-        status: 201,
-      }
-    );
+    return generateAPIResponse({ message: "User registered successfully." }, 201);
   } catch (error: unknown) {
     console.log("========== ERROR REGISTER =============", error);
-    return NextResponse.json(
-      {
-        message:
-          (error as { message: string }).message || "Internal Server Error",
-      },
-      { status: (error as { status: number }).status || 500 }
+    if (error instanceof CustomError)
+      return generateAPIResponse({ message: error.message }, error.status);
+    return generateAPIResponse(
+      { message: (error as { message: string }).message || "Internal Server Error" },
+      (error as { status: number }).status || 500
     );
   }
 };

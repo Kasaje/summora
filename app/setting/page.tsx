@@ -62,9 +62,7 @@ export default function SettingPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Delete Account
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900">Delete Account</h1>
                 <p className="text-sm text-gray-600 mt-1">
                   Permanently remove your account and all associated data
                 </p>
@@ -116,12 +114,8 @@ export default function SettingPage() {
               <p className="text-sm text-gray-700">
                 <strong>Account Details:</strong>
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                Username: @{user.username}
-              </p>
-              {user.name && (
-                <p className="text-sm text-gray-600">Name: {user.name}</p>
-              )}
+              <p className="text-sm text-gray-600 mt-1">Username: @{user.username}</p>
+              {user.name && <p className="text-sm text-gray-600">Name: {user.name}</p>}
               <p className="text-sm text-gray-600">
                 Member since:{" "}
                 {new Date(user.createdAt).toLocaleDateString("en-US", {
@@ -149,18 +143,15 @@ export default function SettingPage() {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-red-900">
-                Delete Account
-              </h3>
+              <h3 className="text-lg font-semibold text-red-900">Delete Account</h3>
             </div>
             <div className="px-6 py-4">
               <p className="text-sm text-gray-600 mb-4">
-                This action cannot be undone. This will permanently delete your
-                account and remove all your data from our servers.
+                This action cannot be undone. This will permanently delete your account and remove
+                all your data from our servers.
               </p>
               <p className="text-sm text-gray-600 mb-4">
-                Please type <span className="font-bold">DELETE</span> to
-                confirm:
+                Please type <span className="font-bold">DELETE</span> to confirm:
               </p>
               <input
                 type="text"
