@@ -1,23 +1,42 @@
-import { Itransaction, ItransactionRepository } from "../utils/interface";
+import {
+  Itransaction,
+  ItransactionCategoryRepository,
+  ItransactionRepository,
+} from "../utils/interface";
 import { transactionConnection } from "../lib/transactionConnection";
 import { ObjectId } from "mongodb";
 
 export class TransactionRepository implements ItransactionRepository {
   constructor() {}
 
-  async getById(id: string): Promise<Itransaction | null> {
-    return (await transactionConnection.findOne<Itransaction>({ _id: new ObjectId(id) })) || null;
+  async getByID(id: string): Promise<Itransaction | null> {
+    const transaction = (await transactionConnection.findOne({ _id: new ObjectId(id) })) || null;
+    return transaction ? this.map(transaction) : null;
   }
 
-  async listByUserID(userID: string): Promise<Itransaction[]> {
-    return await transactionConnection.find({ userID }).sort({ createdAt: -1 }).toArray();
+  async listByUserID(
+    userID: string,
+    transactionCategoryRepository: ItransactionCategoryRepository
+  ): Promise<Itransaction[]> {
+    const transactionList = await transactionConnection
+      .find({ userID })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    return Promise.all(
+      transactionList.map(async (t) => {
+        const categoryName = await transactionCategoryRepository.getByID(t.categoryID);
+        return { ...this.map(t), categoryName: categoryName?.name || "Unknown" };
+      })
+    );
   }
 
   async listByCategoryID(categoryID: string): Promise<Itransaction[]> {
-    return await transactionConnection
-      .find({ categoryID: new ObjectId(categoryID) })
+    const transactionList = await transactionConnection
+      .find({ categoryID })
       .sort({ createdAt: -1 })
       .toArray();
+    return transactionList.map(this.map);
   }
 
   async create(userID: string, info: Itransaction): Promise<void> {
@@ -36,5 +55,13 @@ export class TransactionRepository implements ItransactionRepository {
 
   async delete(id: string): Promise<void> {
     await transactionConnection.deleteOne({ _id: new ObjectId(id) });
+  }
+
+  private map(data: Itransaction & { _id: ObjectId }): Itransaction & { id: string } {
+    const { _id, ...rest } = data;
+    return {
+      id: _id.toString(),
+      ...rest,
+    };
   }
 }
